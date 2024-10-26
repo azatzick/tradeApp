@@ -1,0 +1,28 @@
+
+<div *ngIf="stockData.length > 0; else loading">
+    <table mat-table [dataSource]="stockData" class="mat-elevation-z8">
+        <!-- Ticker Column -->
+        <ng-container matColumnDef="ticker">
+          <th mat-header-cell *matHeaderCellDef> Ticker </th>
+          <td mat-cell *matCellDef="let stock"> {{ stock.ticker }} </td>
+        </ng-container>
+      
+        <!-- Price Column -->
+        <ng-container matColumnDef="price">
+          <th mat-header-cell *matHeaderCellDef> Price </th>
+          <td mat-cell *matCellDef="let stock"> {{ stock.price | currency }} </td>
+        </ng-container>
+      
+        <!-- Timestamp Column -->
+        <ng-container matColumnDef="timestamp">
+          <th mat-header-cell *matHeaderCellDef> Timestamp </th>
+          <td mat-cell *matCellDef="let stock"> {{ stock.timestamp | date:'short' }} </td>
+        </ng-container>
+      
+        <tr mat-header-row *matHeaderRowDef="['ticker', 'price', 'timestamp']"></tr>
+        <tr mat-row *matRowDef="let row; columns: ['ticker', 'price', 'timestamp'];"></tr>
+      </table>
+  </div>
+  <ng-template #loading>
+    <p>Loading stock data...</p>
+  </ng-template>

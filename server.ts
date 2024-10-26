@@ -2,12 +2,16 @@ import express, { Request, Response } from 'express';
 import { Stock } from './models/Stock';
 import axios from 'axios';
 import mongoose from 'mongoose';
+import cors from 'cors';
 
 const app = express();
 const PORT = process.env.PORT || 8000;
 
 //TICKERS TO LIST PERIODICALLY 
 const tickers = ['AAPL', 'GOOGL', 'TSLA', 'MSFT']; // Add more as needed
+app.use(cors({
+    origin: 'http://localhost:4200'
+  }));
 
 app.use(express.json());
 
@@ -42,27 +46,26 @@ const fetchStockData = async (ticker: string) => {
     }
 }
 
-
-
 // API endpoint to manually fetch a stock's data
-app.get('/api/stocks/:ticker', async (req: Request, res: Response) => {
-    const ticker: string = req.params.ticker;
-
+app.get('/api/stocks', async (req: Request, res: Response) => {
     try {
-        await fetchStockData(ticker);
-        res.status(200).json({ message: `Fetched data for ${ticker}` });
+      // Fetch all stocks sorted by the latest timestamp in descending order
+      const stocks = await Stock.find().sort({ timestamp: -1 });
+      res.status(200).json(stocks);
     } catch (error) {
-        console.error('Error fetching stock data:', error);
-        res.status(500).json({ error: 'Failed to fetch stock data' });
+      console.error('Error fetching stocks:', error);
+      res.status(500).json({ error: 'Failed to fetch stocks' });
     }
-});
+  });
 
 // Periodic fetching every minute for multiple stocks
 setInterval(() => {
     tickers.forEach((ticker) => {
         fetchStockData(ticker); // Fetch data for each stock ticker
     });
-}, 10000); // Fetch every 60 seconds
+}, 1000); // Fetch every 60 seconds
+
+
 
 //TEST
 app.listen(PORT, () => {
