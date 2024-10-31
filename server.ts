@@ -23,6 +23,8 @@ mongoose.connect('mongodb://localhost:27017/tradeApp', {
     console.error('Error connecting to mongoDB');
 })
 
+
+//RENDERING REAL-TIME STOCK DATA
 const fetchStockData = async (ticker: string) => {
     try {
         const response = await axios.get<any>(`https://query1.finance.yahoo.com/v8/finance/chart/${ticker}`, {
@@ -37,16 +39,12 @@ const fetchStockData = async (ticker: string) => {
             price: price
         });
         await stock.save();
-        console.log(`Fetched and saved data for ${ticker}: ${price}`);
-        console.log(`Price for ${ticker}: ${price}`);
-        console.log(`Stock object:`, stock);
-
     } catch (error) {
         console.error(`Error fetching data for ${ticker}:`, error);
     }
 }
 
-// API endpoint to manually fetch a stock's data
+// API endpoint to manually fetch a real-time data  data
 app.get('/api/stocks', async (req: Request, res: Response) => {
     try {
       // Fetch all stocks sorted by the latest timestamp in descending order
@@ -65,6 +63,28 @@ setInterval(() => {
     });
 }, 1000); // Fetch every 60 seconds
 
+//HISTORICAL DATA
+const fetchHistoricalData = async (ticker: string, range: string = '1y', interval: string = '1d') => {
+    try {
+        const response = await axios.get<any>(`https://query1.finance.yahoo.com/v8/finance/chart/${ticker}`, {
+            params: { range, interval },
+        });
+        return response.data.chart.result[0];
+    } catch (error) {
+        console.error(`Error fetching historical data for ${ticker}:`, error);
+        throw error;
+    }
+};
+//Api endpoint for historical data
+app.get('/api/historical/:ticker', async (req: Request, res: Response) => {
+    const { ticker } = req.params;
+    try {
+        const historicalData = await fetchHistoricalData(ticker);
+        res.status(200).json(historicalData);
+    } catch (error) {
+        res.status(500).json({ error: 'Failed to fetch historical data' });
+    }
+});
 
 
 //TEST
