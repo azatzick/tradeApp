@@ -8,7 +8,7 @@ import {MatTableModule} from '@angular/material/table';
   standalone: true,
   imports: [CommonModule, MatTableModule],
   templateUrl: './stock-display.component.html',
-  styleUrls: []
+  styleUrls: ['./stock-display.component.scss']
 })
 export class StockDisplayComponent implements OnInit {
   stockData: StockData[] = [];
@@ -24,7 +24,7 @@ export class StockDisplayComponent implements OnInit {
   }
 
   async fetchStockData() {
-    const data = await this.stockService.getStockData();
+    const data = await this.stockService.getLiveStockData();
     
     const uniqueStocks = new Map<string, StockData>();
     data.forEach(stock => {
@@ -36,6 +36,6 @@ export class StockDisplayComponent implements OnInit {
   
     // Convert Map values back to an array
     this.stockData = Array.from(uniqueStocks.values());
-    console.log('Filtered stock data:', this.stockData);
+    //console.log('Filtered stock data:', this.stockData);
   }
 }
