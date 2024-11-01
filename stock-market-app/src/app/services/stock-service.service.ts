@@ -30,7 +30,6 @@ export class StockService {
       return null;
     }
   }
-
 }
 
 export interface StockData{

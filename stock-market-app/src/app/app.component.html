@@ -3,15 +3,7 @@
     <div class="left-side">
       <h1>market update</h1>
       <app-stock-display></app-stock-display>
-
-      <!-- Spacer for consistent spacing between components -->
-      <div class="chart-container">
-        <app-historical-data [ticker]="'AAPL'"></app-historical-data>
-      </div>
-
-      <div class="chart-container">
-        <app-historical-data [ticker]="'GOOGL'"></app-historical-data>
-      </div>
+      <app-historical-data></app-historical-data>
     </div>
   </div>
 </main>

@@ -64,7 +64,7 @@ setInterval(() => {
 }, 1000); // Fetch every 60 seconds
 
 //HISTORICAL DATA
-const fetchHistoricalData = async (ticker: string, range: string = '1y', interval: string = '1d') => {
+const fetchHistoricalData = async (ticker: string, range: string = '5y', interval: string = '1mo') => {
     try {
         const response = await axios.get<any>(`https://query1.finance.yahoo.com/v8/finance/chart/${ticker}`, {
             params: { range, interval },

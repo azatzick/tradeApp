@@ -12,67 +12,93 @@ import { MatCardModule } from '@angular/material/card';
   styleUrls: ['./historical-data.component.scss']
 })
 export class HistoricalDataComponent implements OnInit {
-  @Input() ticker?: string;
+  chart: any;
+  tickers = ['AAPL', 'GOOGL', 'TSLA', 'MSFT']; // List of tickers
+  colors = ['#1E3A8A', '#2563EB', '#3B82F6', '#60A5FA']; // Different shades of blue
+
   chartData: ChartData<'line'> = {
     labels: [],
-    datasets: [
-      {
-        label: 'Price',
-        data: [],
-        borderColor: '#42A5F5',
-        fill: false
-      }
-    ]
+    datasets: [],
   };
-  chartOptions: ChartOptions = { responsive: true };
-  private chart: Chart | undefined;
+
+  chartOptions: ChartOptions = {
+    responsive: true,
+  };
 
   constructor(private stockService: StockService) {}
 
   ngOnInit(): void {
-    if (this.ticker) {
-      this.fetchHistoricalData();
+    this.fetchHistoricalData();
+  }
+
+  async fetchHistoricalData() {
+    for (let i = 0; i < this.tickers.length; i++) {
+      const ticker = this.tickers[i];
+      const color = this.colors[i];
+  
+      try {
+        const data = await this.stockService.getHistoricalData(ticker);
+
+        // Check if data is valid
+        if (data && data.timestamp && data.indicators?.quote?.[0]?.close) {
+          // Convert timestamps to formatted dates
+          const timestamps = data.timestamp.map((timestamp: number) => 
+            this.formatDate(new Date(timestamp * 1000))
+          );
+          
+          const prices = data.indicators.quote[0].close;
+
+          // Update chart labels only once (for the first ticker)
+          // Check if labels are set, otherwise assign the timestamps
+          // Check if labels are set, otherwise assign the timestamps
+        if (!this.chartData.labels || this.chartData.labels.length === 0) {
+          this.chartData.labels = timestamps;
+        }
+
+          // Add each dataset with color and label
+          this.chartData.datasets.push({
+            label: ticker,
+            data: prices,
+            borderColor: color,
+            fill: false,
+          });
+        } else {
+          console.error(`Data for ${ticker} is missing required fields or is null.`);
+        }
+      } catch (error) {
+        console.error(`Error fetching historical data for ${ticker}:`, error);
+      }
     }
+    this.createChart();
+  }
+
+  formatDate(date: Date): string {
+    // Format to show only one label per month
+    return `${date.toLocaleString('default', { month: 'short' })}.${date.getFullYear()}`;
   }
 
   createChart() {
-    // Destroy the existing chart if it exists
+    const ctx = document.getElementById('historicalChart') as HTMLCanvasElement;
+
     if (this.chart) {
-        this.chart.destroy();
+      this.chart.destroy(); // Clear previous chart
     }
 
-    // Use the ticker symbol to select the correct canvas element
-    const ctx = document.getElementById(this.ticker + 'Chart') as HTMLCanvasElement;
-    if (!ctx) return; // Exit if canvas is not found
-
     this.chart = new Chart(ctx, {
-        type: 'line',
-        data: this.chartData,
-        options: this.chartOptions
-    });
-}
-
-  fetchHistoricalData() {
-    if (!this.ticker) return;
-    this.stockService.getHistoricalData(this.ticker).then((data) => {
-        if (data && data.timestamp && data.indicators?.quote?.[0]?.close) {
-            // Convert timestamps to "MMM.YYYY"
-            this.chartData.labels = data.timestamp.map((timestamp: number) => {
-                const date = new Date(timestamp * 1000);
-                const month = date.toLocaleString('default', { month: 'short' });
-                const year = date.getFullYear();
-                return `${month}.${year}`;
-            });
-            
-            // Get closing prices
-            this.chartData.datasets[0].data = data.indicators.quote[0].close;
-
-            this.createChart(); // Ensure chart is created with updated data
-        } else {
-            console.error("Unexpected data format:", data);
+      type: 'line',
+      data: this.chartData,
+      options: {
+        ...this.chartOptions,
+        scales: {
+          x: {
+            ticks: {
+              maxRotation: 0,
+              autoSkip: true,
+              maxTicksLimit: 12 // Limit to one label per month
+            }
+          }
         }
-    }).catch((error) => {
-        console.error("Error fetching historical data:", error);
+      },
     });
-}
+  }
 }
